@@ -120,15 +120,21 @@ Status TrimFile(const std::string& input_filename,
   const int64_t desired_samples = (desired_length_ms * sample_rate) / 1000;
   std::vector<float> trimmed_samples;
   TrimToLoudestSegment(wav_samples, desired_samples, &trimmed_samples);
-  float total_volume = 0.0f;
+  float total_volume = 0.0f, max_volume = 0.0f;
   for (float trimmed_sample : trimmed_samples) {
-    total_volume += fabsf(trimmed_sample);
+	  const auto sample_volume = fabsf(trimmed_sample);
+    total_volume += sample_volume;
+	max_volume = std::max(max_volume, sample_volume);
   }
   const float average_volume = total_volume / desired_samples;
   if (average_volume < min_volume) {
     std::cerr << "Skipped '" << input_filename << "' as too quiet (" 
 	      << average_volume << ")" << std::endl;
     return Status::OK();
+  }
+  
+  for (auto& trimmed_sample : trimmed_samples) {
+    trimmed_sample = trimmed_sample * (0.999f / max_volume);
   }
 
   std::string output_wav_data;
