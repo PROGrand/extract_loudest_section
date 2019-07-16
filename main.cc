@@ -102,9 +102,6 @@ Status TrimFile(const std::string& input_filename,
     return load_wav_status;
   }
   
-  std::cerr << "Channels: " << channel_count << ", samplerate: " << sample_rate
-	<< ", samples count: " << sample_count << std::endl;
-
   // If we have a stereo or more recording, convert it down to mono.
   if (channel_count != 1) {
     const int mono_sample_count = sample_count / channel_count;
@@ -136,8 +133,8 @@ Status TrimFile(const std::string& input_filename,
 
   std::string output_wav_data;
   Status save_wav_status =
-      EncodeAudioAsS16LEWav(wav_samples.data(), sample_rate, 1,
-                            wav_samples.size(), &output_wav_data);
+      EncodeAudioAsS16LEWav(trimmed_samples.data(), sample_rate, 1,
+                            trimmed_samples.size(), &output_wav_data);
 
   std::ofstream output_file(output_filename, std::ios_base::out | std::ios_base::binary);
   output_file.write(output_wav_data.c_str(), output_wav_data.length());
