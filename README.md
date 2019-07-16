@@ -3,7 +3,7 @@
 This is a port of original [project](https://github.com/petewarden/extract_loudest_section) with crossplatform support, especially for Windows (MinGW).
 
 - [x] Removed <del>glob</del>, added **input-dir** as first argument 
-- [ ] Volume normalization of trimmed fragment
+- [x] Volume normalization (to full PCM16 SLE range) of trimmed fragment
 
 This is a simple tool to take .wav audio files, identify the loudest segment of a given length, and
 then write out that segment as a new .wav file. I'm using this to do simple alignment on some
