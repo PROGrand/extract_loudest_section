@@ -1,5 +1,7 @@
 # Extract Loudest Section
 
+This is a port of original [project](https://github.com/petewarden/extract_loudest_section) with crossplatform support, especially for Windows (MinGW).
+
 This is a simple tool to take .wav audio files, identify the loudest segment of a given length, and
 then write out that segment as a new .wav file. I'm using this to do simple alignment on some
 captured audio of people saying single words, where there are indeterminate gaps before and after
