@@ -2,6 +2,9 @@
 
 This is a port of original [project](https://github.com/petewarden/extract_loudest_section) with crossplatform support, especially for Windows (MinGW).
 
+- [x] Removed <del>glob</del>, added **input-dir** as first argument 
+- [ ] Volume normalization of trimmed fragment
+
 This is a simple tool to take .wav audio files, identify the loudest segment of a given length, and
 then write out that segment as a new .wav file. I'm using this to do simple alignment on some
 captured audio of people saying single words, where there are indeterminate gaps before and after
@@ -50,11 +53,10 @@ This tool isn't designed for general use or flexibility:
 
  - It only deals with mono 16-bit WAVs, since that's all I need.
 
- - It takes two command line arguments, the first is the glob for the .wavs to read (for example
-"*/*.wav") and the second is the root of the output directory. Sub-directories one level deep
-will be created, and output files will be placed with the same names in those directories under the
+ - It takes two command line arguments, the first is the input directory for the .wavs to read and the second is the root of the output directory. Sub-directories one level deep
+will be created, and output files will be placed with the same names in those directory under the
 output root. This peculiar setup is so that it's easy for me to process my files of speech data.'
 
 ## Building
 
-There's a Makefile for Linux and Xcode project for MacOS.
+There's a Makefile for Linux and MinGW and Xcode project for MacOS (not tested in port yet).
