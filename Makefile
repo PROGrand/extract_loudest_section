@@ -1,13 +1,13 @@
-MAKEFILE_DIR := /tmp/extract_loudest_section/
+MAKEFILE_DIR := .
 
 # Where compiled objects are stored.
 OBJDIR := $(MAKEFILE_DIR)/gen/obj/
-BINDIR := $(MAKEFILE_DIR)/gen/bin/
+BINDIR := $(MAKEFILE_DIR)
 
 CXX := gcc
-CXXOPTS := --std=c++11 -O3 -DNDEBUG
+CXXOPTS := --std=c++17 -O3 -DNDEBUG
 INCLUDES := -I.
-LDOPTS :=
+LDOPTS := --std=c++17
 LIBS := -lstdc++ -lm
 
 EXECUTABLE_PATH := $(BINDIR)/extract_loudest_section

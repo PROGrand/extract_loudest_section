@@ -15,9 +15,7 @@
 
 #include <assert.h>
 #include <fcntl.h>
-#include <glob.h>
 #include <math.h>
-#include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -26,34 +24,31 @@
 #include <iostream>
 #include <set>
 #include <vector>
+#include <filesystem>
+namespace fs = std::filesystem;
 
 #include "wav_io.h"
 
-class MemMappedFile {
+class FileArray {
  public:
-  MemMappedFile(const std::string& filename) {
+  FileArray(const std::string& filename) {
     const char* c_filename = filename.c_str();
     struct stat st;
     stat(c_filename, &st);
     filesize_ = st.st_size;
-    fd_ = open(c_filename, O_RDONLY, 0);
-    data_ = reinterpret_cast<uint8_t*>(
-        mmap(NULL, filesize_, PROT_READ, MAP_PRIVATE, fd_, 0));
+    int fd_ = open(c_filename, O_RDONLY, 0);
+    data_ = new uint8_t[filesize_];
     assert(fd_ != -1);
-    // Execute mmap
-    if (data_ == MAP_FAILED) {
-      fprintf(stderr, "mmap() failed with %p for '%s'\n", data_, filename.c_str());
-    }
-    assert(data_ != MAP_FAILED);
+    
+	read(fd_, data_, filesize_);
+	
+	close(fd_);
   }
-  ~MemMappedFile() {
-    int rc = munmap(data_, filesize_);
-    assert(rc == 0);
-    close(fd_);
+  ~FileArray() {
+    delete [] data_;
   }
 
   size_t filesize_;
-  int fd_;
   uint8_t* data_;
 };
 
@@ -92,7 +87,7 @@ Status TrimFile(const std::string& input_filename,
                 const std::string& output_filename,
                 const int64_t desired_length_ms,
 		const float min_volume) {
-  MemMappedFile input_file(input_filename);
+  FileArray input_file(input_filename);
 
   std::vector<float> wav_samples;
   uint32_t sample_count;
@@ -106,6 +101,9 @@ Status TrimFile(const std::string& input_filename,
               << "' as a WAV: " << load_wav_status << std::endl;
     return load_wav_status;
   }
+  
+  std::cerr << "Channels: " << channel_count << ", samplerate: " << sample_rate
+	<< ", samples count: " << sample_count << std::endl;
 
   // If we have a stereo or more recording, convert it down to mono.
   if (channel_count != 1) {
@@ -138,10 +136,10 @@ Status TrimFile(const std::string& input_filename,
 
   std::string output_wav_data;
   Status save_wav_status =
-      EncodeAudioAsS16LEWav(trimmed_samples.data(), sample_rate, 1,
-                            trimmed_samples.size(), &output_wav_data);
+      EncodeAudioAsS16LEWav(wav_samples.data(), sample_rate, 1,
+                            wav_samples.size(), &output_wav_data);
 
-  std::ofstream output_file(output_filename);
+  std::ofstream output_file(output_filename, std::ios_base::out | std::ios_base::binary);
   output_file.write(output_wav_data.c_str(), output_wav_data.length());
 
   std::cerr << "Saved to '" << output_filename << "'" << std::endl;
@@ -163,15 +161,12 @@ int main(int argc, const char* argv[]) {
         << std::endl;
     return -1;
   }
-  const std::string input_glob = argv[1];
-  glob_t glob_result;
-  glob(input_glob.c_str(), GLOB_TILDE, nullptr, &glob_result);
+  const std::string input_dir = argv[1];
   std::vector<std::string> input_filenames;
-  for (int64_t i = 0; i < glob_result.gl_pathc; ++i) {
-    input_filenames.push_back(std::string(glob_result.gl_pathv[i]));
-  }
-  globfree(&glob_result);
-
+  
+  for (const auto & entry : fs::directory_iterator(input_dir))
+        input_filenames.push_back(entry.path().string());
+	
   const std::string output_root = argv[2];
   std::vector<std::string> output_filenames;
   std::set<std::string> output_dirs;
@@ -188,14 +183,14 @@ int main(int argc, const char* argv[]) {
   }
 
   for (const std::string& output_dir : output_dirs) {
-    mkdir(output_dir.c_str(), ACCESSPERMS);
+    mkdir(output_dir.c_str());
   }
 
   assert(input_filenames.size() == output_filenames.size());
   for (int64_t i = 0; i < input_filenames.size(); ++i) {
     const std::string input_filename = input_filenames[i];
     const std::string output_filename = output_filenames[i];
-    const int64_t desired_length_ms = 1000;
+    const int64_t desired_length_ms = 10000;
     const float min_volume = 0.004f;
     Status trim_status =
       TrimFile(input_filename, output_filename, desired_length_ms, min_volume);
