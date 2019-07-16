@@ -214,19 +214,15 @@ Status EncodeAudioAsS16LEWav(const float* audio, size_t sample_rate,
   EncodeFixed32(data_chunk->chunk_data_size, data_size);
 
 
-//FILE* f = fopen("test.pcm", "w");
   // Write the audio.
   data += kHeaderSize;
   for (size_t i = 0; i < num_samples; ++i) {
     int16_t sample = FloatToInt16Sample(audio[i]);
 	
-	//fwrite(&sample, 2, 1, f);
     EncodeFixed16(&data[i * kBytesPerSample],
                         static_cast<uint16_t>(sample));
   }
   
-  //fclose(f);
-  //exit(-1);
   return Status::OK();
 }
 
